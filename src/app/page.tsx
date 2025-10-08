@@ -1,95 +1,90 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+"use client";
+
+import { useState } from "react";
+import style from "./page.module.css";
+import { FileUpload } from "./components/FileUpload/FileUpload";
+import Header from "./components/Header/Header";
+import { AudioPlayer } from "./components/AudioPlayer/AudioPlayer";
+import { Loader2 } from "lucide-react";
+import FeedbackReport from "./components/FeedbackReport/FeedbackReport";
 
 export default function Home() {
-  return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>src/app/page.tsx</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [result, setResult] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
+
+
+  const handleProcessCall = async () => {
+    if (!selectedFile) return;
+
+    setIsProcessing(true);
+    setResult(null);
+    setError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+
+      const res = await fetch("/api/analyze-call", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        throw new Error(`Server error: ${res.status}`);
+      }
+
+      const data = await res.json();
+      setResult(data); 
+    } catch (err: any) {
+      console.error("Error calling API:", err);
+      setError(err.message || "Failed to process call");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  return (
+    <div className={style.topContainer}>
+      <Header />
+
+      <div className={style.contentContainer}>
+        <FileUpload
+          onFileSelect={setSelectedFile}
+          selectedFile={selectedFile}
+        />
+
+        {selectedFile && <AudioPlayer file={selectedFile} />}
+      </div>
+
+      {selectedFile && (
+        <div className={style.processButtonContainer}>
+          <button
+            onClick={handleProcessCall}
+            className={style.processButton}
+            disabled={isProcessing}>
+            {isProcessing ? (
+              <>
+                <Loader2 className={style.loader} />
+                Processing...
+              </>
+            ) : (
+              "Process Call"
+            )}
+          </button>
         </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      )}
+
+      {isProcessing && <p style={{ marginTop: "1rem" }}>Processing audio...</p>}
+
+      {error && (
+        <p style={{ marginTop: "1rem", color: "red" }}>Error: {error}</p>
+      )}
+
+      {result && <FeedbackReport feedback={result} />}
+    
     </div>
   );
 }
