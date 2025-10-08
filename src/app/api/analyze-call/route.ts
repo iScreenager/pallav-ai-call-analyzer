@@ -4,6 +4,8 @@ import path from "path";
 import { transcribeAudio } from "@/lib/transcribeAudio";
 import { analyzeWithGemini } from "@/lib/analyzeWithGemini";
 
+export const runtime = "nodejs";
+
 interface Feedback {
   scores: Record<string, number>;
   overallFeedback: string;
