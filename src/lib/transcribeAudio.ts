@@ -16,7 +16,7 @@ export async function transcribeAudio(
       file,
       modelId: "scribe_v1",
       tagAudioEvents: true,
-      diarize: false, // ensures single-speaker output
+      diarize: false, 
     });
 
   if ("text" in transcription && typeof transcription.text === "string") {
