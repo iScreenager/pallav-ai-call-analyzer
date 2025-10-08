@@ -24,12 +24,8 @@ export async function POST(req: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    const uploadsDir = path.join(process.cwd(), "uploads");
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir, { recursive: true });
-    }
-
-    const tempPath = path.join(uploadsDir, file.name);
+    
+    const tempPath = path.join("/tmp", file.name);
     fs.writeFileSync(tempPath, buffer);
 
     let transcription: string;
@@ -60,6 +56,7 @@ export async function POST(req: NextRequest) {
           "The speaker maintained good engagement throughout the conversation and communicated effectively.",
       };
     }
+
 
     fs.unlinkSync(tempPath);
 
